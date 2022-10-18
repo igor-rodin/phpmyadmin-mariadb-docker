@@ -1,0 +1,41 @@
+version: '3'
+
+services:
+  db:
+    image: mariadb:10.9
+    container_name: db
+    restart: unless-stopped
+    env_file: .env
+    environment:
+      - MARIADB_DATABASE=phpmyadmin
+    volumes:
+      - dbdata:/var/lib/mysql
+    networks:
+      - pma-network
+
+  phpmyadmin:
+    depends_on:
+      - db
+    image: phpmyadmin:5.2
+    container_name: phpmyadmin
+    restart: unless-stopped
+    env_file: .env
+    ports:
+      - 81:80
+    environment:
+      - PMA_HOST=db
+      - PMA_PORT=3306
+      - PMA_USER=$MARIADB_USER
+      - PMA_PASSWORD=$MARIADB_PASSWORD
+      - PMA_PMADB=phpmyadmin
+    volumes:
+      - ./config.user.inc.php:/etc/phpmyadmin/config.user.inc.php
+    networks:
+      - pma-network
+  
+volumes:
+  dbdata:
+  
+networks:
+  pma-network:
+    driver: bridge
